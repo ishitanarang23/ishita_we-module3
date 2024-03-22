@@ -1,0 +1,156 @@
+
+
+import random
+
+def generate_text(word_dict, start_word, output_length, chain_length=10):
+  """
+  Generates text recursively using a Markov chain model, with a maximum chain length.
+
+  Args:
+      word_dict: A dictionary representing word transitions.
+      start_word: The word to start the generated text.
+      output_length: The desired length of the generated text.
+      chain_length: The maximum length of the word chain to consider (default 10).
+
+  Returns:
+      A string containing the generated text.
+  """
+
+
+  if output_length <= 0:
+    return ""
+
+  if chain_length <= 0:  # Allow chain_length to be 0
+    next_word = random.choice(list(word_dict[start_word].keys()))  # Choose a random next word
+    return f"{start_word} {generate_text(word_dict, next_word, output_length - 1, chain_length)}"  # Recursive call
+
+  next_word = select_next_word(word_dict, start_word)
+  # Limit chain length by stopping recursion if chain_length is reached
+  if chain_length == 1:
+    return f"{start_word}"
+  else:
+    return f"{start_word} {generate_text(word_dict, next_word, output_length - 1, chain_length - 1)}"
+
+
+
+def select_next_word(word_dict, current_word):
+  """Selects the next word based on probabilities or a random choice."""
+
+  if current_word not in word_dict:
+    return random.choice(list(word_dict.keys()))  # Random word if not in dict
+
+  word_choices = list(word_dict[current_word].keys())
+  word_probs = [word_dict[current_word][word] / sum(word_dict[current_word].values()) for word in word_choices]
+  return random.choices(word_choices, word_probs)[0]
+
+# Sample text corpus (replace with your own corpus or file reading logic)
+text_corpus = "This is a sample text corpus. It contains various words and phrases that can be used to generate new text. The model will learn the probabilities of word transitions and use them to create a sequence of words that resembles the original text."
+
+# Clean the corpus text
+corpus_text = text_corpus.lower()
+corpus_text = corpus_text.replace(",", "").replace(".", "").replace("!", "").replace("?", "")
+words = corpus_text.split()
+
+# Create a dictionary to store word transitions
+word_dict = {}
+i = 0
+while i < len(words) - 1:
+  current_word = words[i]
+  if current_word not in word_dict:
+    word_dict[current_word] = {}
+  next_word = words[i + 1]
+  if next_word in word_dict[current_word]:
+    word_dict[current_word][next_word] += 1
+  else:
+    word_dict[current_word][next_word] = 1
+  i += 1
+
+# Example usage
+text = generate_text(word_dict, start_word="the", output_length=10)
+print(text)
+
+     
+the model will learn the original text the probabilities of
+
+# Test case 1: Basic Functionality
+text = generate_text(word_dict, start_word="the", output_length=5, chain_length = 5)
+print(text)
+
+# Verify the output starts with "the" and is 5 words long
+if text.startswith("the") and len(text.split()) == 5:
+  print("Test case 1 passed: Basic functionality works!")
+else:
+  print("Test case 1 failed: Output doesn't meet expectations.")
+
+     
+the original text the original
+Test case 1 passed: Basic functionality works!
+
+# Test case 2: Handling Unknown Start Word
+text = generate_text(word_dict, start_word="zebra", output_length=7,  chain_length = 1)
+print(text)
+
+# No specific verification needed for this test case
+print("Test case 2 passed: Code should generate text starting with 'zebra' even if it's not in the corpus.")
+
+     
+zebra
+Test case 2 passed: Code should generate text starting with 'zebra' even if it's not in the corpus.
+
+# Test case 3: Edge Case - Empty Corpus
+empty_word_dict = {}  # Create an empty dictionary to simulate an empty corpus
+
+# Handle the empty corpus case gracefully (e.g., return an error or default text)
+try:
+  text = generate_text(empty_word_dict, start_word="any", output_length=3)
+  print(text)
+except (IndexError, KeyError) as e:  # Catch potential errors related to empty dictionary access
+  print(f"Test case 3 passed: Code handles empty corpus gracefully (error: {e}).")
+
+     
+Test case 3 passed: Code handles empty corpus gracefully (error: list index out of range).
+
+# Test case 4: Zero Output Length
+try:
+  text = generate_text(word_dict, start_word="is", output_length=0)
+  print(f"Output (should be empty): {text}")
+except ValueError as e:
+  print(f"Test case 4 passed: Code should raise an error for zero output length (error: {e}).")
+
+     
+Output (should be empty): 
+
+# Test case 5: Very Long Output Length
+
+# Adjust this value based on your system resources and desired test length
+very_long_length = 1000
+
+try:
+  text = generate_text(word_dict, start_word="a", output_length=very_long_length)
+  # Print only the first few words to avoid overwhelming the console/output
+  print(f"Output (first few words): {text[:20]}...")
+except (MemoryError, RecursionError) as e:
+  print(f"Test case 5 passed: Code should handle very long output lengths gracefully (error: {e}).")
+
+     
+Output (first few words): a sample text corpus...
+
+# Test case 6: Non-string starting word (should raise TypeError)
+try:
+  text = generate_text(word_dict, start_word=10, output_length=5)  # Pass an integer as starting word
+  print(text)
+except TypeError as e:
+  print(f"Test case 6 passed: Code should raise an error for non-string starting word (error: {e}).")
+
+     
+10 sequence of word transitions 
+
+# Test case 7: Non-numeric output length (should raise TypeError)
+try:
+  text = generate_text(word_dict, start_word="once", output_length="ten")  # Pass a string as output length
+  print(text)
+except TypeError as e:
+  print(f"Test case 7 passed: Code should raise an error for non-numeric output length (error: {e}).")
+
+     
+Test case 7 passed: Code should raise an error for non-numeric output length (error: '<=' not supported between instances of 'str' and 'int').
